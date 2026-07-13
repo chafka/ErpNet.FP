@@ -90,6 +90,31 @@ namespace ErpNet.FP.Core
         DeviceStatus PrintDuplicate(Credentials credentials);
 
         /// <summary>
+        /// Prints a short financial report over a date range.
+        /// Default implementation reports "not supported" - only devices
+        /// that override it (see MkSynergyIslFiscalPrinter) actually support it.
+        /// </summary>
+        DeviceStatus PrintPeriodicReport(PeriodicReport periodicReport)
+        {
+            var status = new DeviceStatus();
+            status.AddError("E999", "Periodic report is not supported by this device.");
+            return status;
+        }
+
+        /// <summary>
+        /// Validates the periodic report object
+        /// </summary>
+        DeviceStatus ValidatePeriodicReport(PeriodicReport periodicReport)
+        {
+            var status = new DeviceStatus();
+            if (periodicReport.StartDate > periodicReport.EndDate)
+            {
+                status.AddError("E403", "\"startDate\" should not be after \"endDate\"");
+            }
+            return status;
+        }
+
+        /// <summary>
         /// Raw request.
         /// </summary>
         DeviceStatusWithRawResponse RawRequest(RequestFrame requestFrame);

@@ -27,6 +27,7 @@ namespace ErpNet.FP.Core.Drivers.MkSynergy
     public partial class MkSynergyIslFiscalPrinter : BgDatecsCIslFiscalPrinter
     {
         private const byte CommandFiscalReceiptSaleWithSign = 0x34;
+        private const byte CommandPeriodicReport = 0x4f;
 
         private static readonly Regex UniqueSalesNumberPattern =
             new Regex("^[A-Z]{2}[0-9]{6}-[A-Z0-9]{4}-[0-9]{7}$", RegexOptions.Compiled);
@@ -288,6 +289,34 @@ namespace ErpNet.FP.Core.Drivers.MkSynergy
                     status.AddError("E403", $"Payment total amount ({paymentAmount.ToString(CultureInfo.InvariantCulture)}) should be the same as the items total amount ({itemsTotalAmount.ToString(CultureInfo.InvariantCulture)})");
                 }
             }
+            return status;
+        }
+
+        public DeviceStatus ValidatePeriodicReport(PeriodicReport periodicReport)
+        {
+            var status = new DeviceStatus();
+            if (periodicReport.StartDate == DateTime.MinValue || periodicReport.EndDate == DateTime.MinValue)
+            {
+                status.AddError("E403", "Both \"startDate\" and \"endDate\" are required");
+                return status;
+            }
+            if (periodicReport.StartDate > periodicReport.EndDate)
+            {
+                status.AddError("E403", "\"startDate\" should not be after \"endDate\"");
+            }
+            return status;
+        }
+
+        // 4Fh "Sums accumulated in the fiscal memory for a selected period" -
+        // prints a short financial report for the given date range (DDMMYY).
+        public DeviceStatus PrintPeriodicReport(PeriodicReport periodicReport)
+        {
+            var header = string.Join(",",
+                new string[] {
+                    periodicReport.StartDate.ToString("ddMMyy", CultureInfo.InvariantCulture),
+                    periodicReport.EndDate.ToString("ddMMyy", CultureInfo.InvariantCulture)
+                });
+            var (_, status) = Request(CommandPeriodicReport, header);
             return status;
         }
     }

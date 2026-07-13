@@ -15,7 +15,8 @@
         ZReport,
         SetDateTime,
         Duplicate,
-        Reset
+        Reset,
+        PeriodicReport
     }
 
     public delegate object Run(object document);
@@ -161,6 +162,21 @@
                         break;
                     case PrintJobAction.Reset:
                         Result = Printer.Reset((Credentials)(Document ?? new Credentials()));
+                        break;
+                    case PrintJobAction.PeriodicReport:
+                        if (Document != null)
+                        {
+                            var periodicReport = (PeriodicReport)Document;
+                            var validateStatus = Printer.ValidatePeriodicReport(periodicReport);
+                            if (validateStatus.Ok)
+                            {
+                                Result = Printer.PrintPeriodicReport(periodicReport);
+                            }
+                            else
+                            {
+                                Result = validateStatus;
+                            }
+                        }
                         break;
                     default:
                         break;
