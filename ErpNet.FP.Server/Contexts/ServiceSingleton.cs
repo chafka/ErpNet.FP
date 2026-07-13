@@ -9,6 +9,7 @@
     using ErpNet.FP.Core.Drivers.BgIncotex;
     using ErpNet.FP.Core.Drivers.BgTremol;
     using ErpNet.FP.Core.Drivers.BgSis;
+    using ErpNet.FP.Core.Drivers.MkSynergy;
     using ErpNet.FP.Core.Provider;
     using ErpNet.FP.Core.Service;
     using ErpNet.FP.Core.Transports;
@@ -51,6 +52,7 @@
             var tremolZfp = new BgTremolZfpFiscalPrinterDriver();
             var tremolV2Zfp = new BgTremolZfpV2FiscalPrinterDriver();
             var bgSisJson = new BgSisJsonFiscalPrinterDriver();
+            var mkSynergyIsl = new MkSynergyIslFiscalPrinterDriver();
 
             // Add drivers and their compatible transports to the provider.
             Provider = new Provider(configOptions)
@@ -60,6 +62,9 @@
                 // Isl Frame
                 .Register(datecsCIsl, comTransport)
                 .Register(datecsCIsl, tcpTransport)
+                // North Macedonia Synergy PF-550/PF700
+                .Register(mkSynergyIsl, comTransport)
+                .Register(mkSynergyIsl, tcpTransport)
                 .Register(datecsPIsl, comTransport)
                 .Register(datecsPIsl, tcpTransport)
                 .Register(eltradeIsl, comTransport)

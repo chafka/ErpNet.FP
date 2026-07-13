@@ -90,29 +90,41 @@
         {
             var debugLogFolder = Path.Combine(pathToContentRoot, "wwwroot", "debug");
             var debugLogFilePath = Path.Combine(debugLogFolder, DebugLogFileName);
-            Directory.CreateDirectory(debugLogFolder);
 
-            for (var i = 9; i > 1; i--)
+            // Housekeeping only (rotating/zipping old debug logs). If the
+            // process can't write here (e.g. running interactively from a
+            // protected folder like Program Files without elevation), skip
+            // it rather than crashing the whole server on startup.
+            try
             {
-                if (File.Exists($"{debugLogFilePath}.{i - 1}.zip"))
-                {
-                    File.Move($"{debugLogFilePath}.{i - 1}.zip", $"{debugLogFilePath}.{i}.zip", true);
-                }
-            }
+                Directory.CreateDirectory(debugLogFolder);
 
-            var files = Directory.GetFiles(debugLogFolder, DebugLogFilePattern);
-            if (files.Length > 0)
-            {
-                // Zip the files
-                using (var zip = ZipFile.Open($"{debugLogFilePath}.1.zip", ZipArchiveMode.Create))
+                for (var i = 9; i > 1; i--)
                 {
-                    foreach (var fileNameWithDatePattern in files)
+                    if (File.Exists($"{debugLogFilePath}.{i - 1}.zip"))
                     {
-                        zip.CreateEntryFromFile(fileNameWithDatePattern, Path.GetFileName(fileNameWithDatePattern));
-                        File.Delete(fileNameWithDatePattern);
+                        File.Move($"{debugLogFilePath}.{i - 1}.zip", $"{debugLogFilePath}.{i}.zip", true);
                     }
                 }
-                
+
+                var files = Directory.GetFiles(debugLogFolder, DebugLogFilePattern);
+                if (files.Length > 0)
+                {
+                    // Zip the files
+                    using (var zip = ZipFile.Open($"{debugLogFilePath}.1.zip", ZipArchiveMode.Create))
+                    {
+                        foreach (var fileNameWithDatePattern in files)
+                        {
+                            zip.CreateEntryFromFile(fileNameWithDatePattern, Path.GetFileName(fileNameWithDatePattern));
+                            File.Delete(fileNameWithDatePattern);
+                        }
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Skipping debug log history rotation: {ex.Message}");
             }
             return debugLogFilePath;
         }
